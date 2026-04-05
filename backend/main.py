@@ -1,6 +1,7 @@
 import os
 import base64
 import io
+import re
 import time
 from collections import defaultdict
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
@@ -160,6 +161,14 @@ async def generate_description(
 
         data = response.json()
         description = data["choices"][0]["message"]["content"]
+
+        # Убираем markdown символы
+        description = re.sub(r'#{1,6}\s*', '', description)
+        description = re.sub(r'\*\*', '', description)
+        description = re.sub(r'(?<!\*)\*(?!\*)', '', description)
+        description = re.sub(r'---+', '', description)
+        description = re.sub(r'_+', '', description)
+        description = description.strip()
 
         return {"description": description}
 
