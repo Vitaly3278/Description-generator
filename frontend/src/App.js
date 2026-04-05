@@ -139,7 +139,7 @@ function App() {
             <div className="logo-icon-wrapper">
               <span>📦</span>
             </div>
-            <h1>Product<span className="highlight">Desc</span></h1>
+            <h1>Description <span className="highlight">generator</span></h1>
           </div>
           <p className="hero-title">Генерация продающих описаний товаров по фото с помощью ИИ</p>
           <p className="hero-subtitle">
@@ -356,7 +356,7 @@ function App() {
           <div className="footer-content">
             <div className="footer-logo">
               <span>📦</span>
-              <span>ProductDesc</span>
+              <span>Description generator</span>
             </div>
             <p className="footer-text">Генерация описаний с помощью Qwen AI • 2026</p>
           </div>
