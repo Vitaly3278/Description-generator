@@ -300,28 +300,38 @@ function App() {
 
       {/* Hero Header */}
       <header className="hero">
+        <div className="hero-particles">
+          <div className="particle p1"></div>
+          <div className="particle p2"></div>
+          <div className="particle p3"></div>
+          <div className="particle p4"></div>
+          <div className="particle p5"></div>
+          <div className="particle p6"></div>
+        </div>
         <div className="container hero-content">
-          <div className="hero-badge">✨ Бесплатно на тестовом лимите</div>
-          <div className="logo">
-            <div className="logo-icon-wrapper">
-              <span>📦</span>
+          <div className="hero-badge">🚀 Работает бесплатно</div>
+          <div className="hero-main-title">
+            <div className="hero-icon-row">
+              <span className="hero-icon">📸</span>
+              <span className="hero-arrow-icon">→</span>
+              <span className="hero-icon">✨</span>
             </div>
-            <h1>Description <span className="highlight">generator</span></h1>
+            <h1>Генератор описания</h1>
+            <h2>товара по фото</h2>
           </div>
-          <p className="hero-title">Генерация продающих описаний товаров по фото с помощью ИИ</p>
           <p className="hero-subtitle">
-            Загрузите фотографию товара — нейросеть Qwen создаст профессиональное описание
-            с характеристиками, преимуществами и призывом к покупке
+            Нейросеть Qwen распознаёт товар на изображении и создаёт продающее описание
+            с характеристиками, преимуществами и призывом к покупке — за 10 секунд
           </p>
           <div className="hero-features">
-            <div className="hero-feature"><Sparkles size={16} /><span>AI-анализ</span></div>
+            <div className="hero-feature"><Sparkles size={16} /><span>AI-анализ фото</span></div>
             <div className="hero-feature"><Globe size={16} /><span>Русский язык</span></div>
-            <div className="hero-feature"><Zap size={16} /><span>10-15 сек</span></div>
+            <div className="hero-feature"><Zap size={16} /><span>10 секунд</span></div>
             <div className="hero-feature"><Shield size={16} /><span>Без регистрации</span></div>
           </div>
-          <div className="hero-arrow" onClick={() => document.querySelector('.main')?.scrollIntoView({ behavior: 'smooth' })}>
-            <ArrowDown size={22} />
-          </div>
+          <button className="hero-cta" onClick={() => document.querySelector('.main')?.scrollIntoView({ behavior: 'smooth' })}>
+            Попробовать <ArrowDown size={18} />
+          </button>
         </div>
         <div className="hero-wave">
           <svg viewBox="0 0 1440 80" fill="none"><path d="M0 80L60 70C120 60 240 40 360 35C480 30 600 40 720 45C840 50 960 50 1080 52C1200 55 1320 60 1380 62L1440 65V80H0Z" className="hero-wave-fill"/></svg>
