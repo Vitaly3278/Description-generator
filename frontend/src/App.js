@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Copy, Upload, Loader2, Check, Image as ImageIcon, Sparkles, Shield, Zap, Globe, ArrowDown, Clock, Download, FileText, Moon, Sun, Trash2, LayoutGrid, Eye } from 'lucide-react';
+import { Copy, Upload, Loader2, Check, Image as ImageIcon, Sparkles, Shield, Zap, Globe, ArrowDown, Clock, Download, FileText, Moon, Sun, Trash2 } from 'lucide-react';
 import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -61,8 +61,6 @@ function App() {
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [selectedMarketplace, setSelectedMarketplace] = useState('ozon');
   const progressRef = useRef(null);
 
   // Load history from localStorage
@@ -248,7 +246,6 @@ function App() {
     setDescription('');
     setError('');
     setShowResult(false);
-    setShowPreview(false);
   };
 
   const loadFromHistory = (item) => {
@@ -396,10 +393,17 @@ function App() {
             </div>
           )}
 
-          {image && !loading && (
+          {image && !loading && !description && (
             <button className="btn-generate" onClick={generateDescription}>
               <Sparkles size={16} />
               Сгенерировать описание
+            </button>
+          )}
+
+          {image && !loading && description && (
+            <button className="btn-generate" onClick={generateDescription}>
+              <Sparkles size={16} />
+              Перегенерировать
             </button>
           )}
 
@@ -423,56 +427,20 @@ function App() {
                   <button className="btn-download" onClick={() => downloadDescription('txt')} title="Скачать .txt">
                     <Download size={14} />
                   </button>
-                  <button
-                    className={`btn-download ${showPreview ? 'active' : ''}`}
-                    onClick={() => setShowPreview(!showPreview)}
-                    title="Предпросмотр"
-                  >
-                    <Eye size={14} />
-                  </button>
                 </div>
               </div>
 
-              {showPreview ? (
-                <div className="marketplace-preview">
-                  <div className={`marketplace-header ${selectedMarketplace}`}>
-                    <div className="mp-tabs">
-                      <button className={`mp-tab ${selectedMarketplace === 'ozon' ? 'active' : ''}`} onClick={() => setSelectedMarketplace('ozon')}>Ozon</button>
-                      <button className={`mp-tab ${selectedMarketplace === 'wb' ? 'active' : ''}`} onClick={() => setSelectedMarketplace('wb')}>Wildberries</button>
-                      <button className={`mp-tab ${selectedMarketplace === 'ym' ? 'active' : ''}`} onClick={() => setSelectedMarketplace('ym')}>Яндекс.Маркет</button>
-                    </div>
-                  </div>
-                  <div className="marketplace-content">
-                    {description.split('\n').map((line, i) => {
-                      if (line.startsWith('**') && line.endsWith('**')) {
-                        return <h3 key={i} className="mp-title">{line.replace(/\*\*/g, '')}</h3>;
-                      }
-                      if (line.startsWith('- ') || line.startsWith('• ')) {
-                        return <li key={i} className="mp-list">{line.slice(2)}</li>;
-                      }
-                      if (line.startsWith('**')) {
-                        const parts = line.split(/\*\*(.*?)\*\*/g);
-                        return <p key={i} className="mp-text">{parts.map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}</p>;
-                      }
-                      if (line.trim() === '') return <br key={i} />;
-                      return <p key={i} className="mp-text">{line}</p>;
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="description-output">
-                  {description.split('\n').map((line, i) => {
-                    if (line.startsWith('**') && line.endsWith('**')) return <h4 key={i} className="desc-heading">{line.replace(/\*\*/g, '')}</h4>;
-                    if (line.startsWith('- ') || line.startsWith('• ')) return <li key={i} className="desc-list-item">{line.slice(2)}</li>;
-                    if (line.startsWith('**')) {
-                      const parts = line.split(/\*\*(.*?)\*\*/g);
-                      return <p key={i} className="desc-paragraph">{parts.map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}</p>;
-                    }
-                    if (line.trim() === '') return <br key={i} />;
-                    return <p key={i} className="desc-paragraph">{line}</p>;
-                  })}
-                </div>
-              )}
+              <div className="description-output">
+                {description.split('\n').map((line, i) => {
+                  if (line.startsWith('**') && line.endsWith('**')) return <h4 key={i} className="desc-heading">{line.replace(/\*\*/g, '')}</h4>;
+                  if (line.startsWith('- ') || line.startsWith('• ')) return <li key={i} className="desc-list-item">{line.slice(2)}</li>;
+                  if (line.match(/^\d+\.\s/)) {
+                    return <h4 key={i} className="desc-heading-small">{line}</h4>;
+                  }
+                  if (line.trim() === '') return <br key={i} />;
+                  return <p key={i} className="desc-paragraph">{line}</p>;
+                })}
+              </div>
             </>
           ) : (
             <div className="empty-state">

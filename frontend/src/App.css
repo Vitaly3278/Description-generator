@@ -389,6 +389,7 @@ body.dark-mode .top-bar {
 
 .desc-heading { font-size: 15px; font-weight: 700; color: var(--primary-dark); margin: 20px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
 .desc-heading:first-child { margin-top: 0; font-size: 19px; color: var(--text); border-bottom-color: var(--primary); }
+.desc-heading-small { font-size: 14px; font-weight: 700; color: var(--primary); margin: 16px 0 8px 0; }
 .desc-list-item { margin-left: 18px; margin-bottom: 6px; color: var(--text); line-height: 1.6; }
 .desc-list-item::marker { color: var(--primary); }
 .desc-paragraph { margin-bottom: 8px; color: var(--text); line-height: 1.6; }
@@ -397,28 +398,6 @@ body.dark-mode .top-bar {
 /* ===== Spinner ===== */
 .spinner { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-
-/* ===== Marketplace Preview ===== */
-.marketplace-preview { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.marketplace-header { padding: 8px 16px; background: #005bff; }
-.marketplace-header.wb { background: #8b3ffd; }
-.marketplace-header.ym { background: #fc3f1d; }
-.mp-tabs { display: flex; gap: 16px; }
-.mp-tab {
-  font-size: 12px; font-weight: 600;
-  padding: 4px 0; border: none;
-  background: none; cursor: pointer;
-  color: rgba(255,255,255,0.6);
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-.mp-tab:hover { color: rgba(255,255,255,0.85); }
-.mp-tab.active { color: white; border-bottom-color: white; }
-.marketplace-content { padding: 16px; background: white; }
-.mp-title { font-size: 16px; font-weight: 700; color: #333; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
-.mp-title:first-child { margin-top: 0; font-size: 20px; }
-.mp-list { margin-left: 18px; margin-bottom: 6px; color: #444; line-height: 1.6; }
-.mp-text { margin-bottom: 8px; color: #444; line-height: 1.6; }
 
 /* ===== History Panel ===== */
 .history-overlay {
@@ -507,6 +486,4 @@ body.dark-mode .top-bar {
 .footer-text { font-size: 12px; }
 
 /* ===== Dark mode adjustments ===== */
-body.dark-mode .marketplace-content { background: var(--bg-card); }
-body.dark-mode .mp-title { color: var(--text); }
-body.dark-mode .mp-list, body.dark-mode .mp-text { color: var(--text-secondary); }
+body.dark-mode .history-panel { border-left-color: #334155; }
