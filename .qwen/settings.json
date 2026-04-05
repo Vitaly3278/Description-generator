@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/kali/Загрузки/**)",
+      "Bash(mkdir *)",
+      "Bash(npm init *)",
+      "Bash(npx *)",
+      "Bash(npm install *)",
+      "Bash(rm *)",
+      "Bash(npm run *)",
+      "Bash(pip install *)",
+      "Bash(pip list)",
+      "Bash(python *)",
+      "Bash(npm start)",
+      "Bash(kill *)",
+      "Bash(cd *)",
+      "Bash(source *)",
+      "Bash(sleep *)",
+      "Bash(curl *)",
+      "Bash(echo *)",
+      "Bash(ps *)",
+      "Bash(grep *)",
+      "Bash(uvicorn *)",
+      "Bash(nohup *)",
+      "Bash(git config *)",
+      "Bash(gh *)",
+      "Bash(git init)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  },
+  "$version": 3
+}
