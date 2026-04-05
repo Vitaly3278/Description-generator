@@ -57,7 +57,7 @@ function App() {
   const [showResult, setShowResult] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressStage, setProgressStage] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState('standard');
+  const [selectedStyle, setSelectedStyle] = useState('short');
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
