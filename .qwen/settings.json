@@ -30,7 +30,13 @@
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(git rm *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(xxd *)",
+      "Bash(find *)",
+      "Bash(tr *)",
+      "Bash(printf *)",
+      "Bash(env *)",
+      "Bash(head *)"
     ]
   },
   "$version": 3

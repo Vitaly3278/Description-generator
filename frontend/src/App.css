@@ -390,12 +390,22 @@ body.dark-mode .top-bar {
 
 /* ===== Marketplace Preview ===== */
 .marketplace-preview { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.marketplace-header { background: #005bff; padding: 10px 16px; }
-.mp-tabs { display: flex; gap: 12px; }
-.mp-tab { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent; }
+.marketplace-header { padding: 8px 16px; background: #005bff; }
+.marketplace-header.wb { background: #8b3ffd; }
+.marketplace-header.ym { background: #fc3f1d; }
+.mp-tabs { display: flex; gap: 16px; }
+.mp-tab {
+  font-size: 12px; font-weight: 600;
+  padding: 4px 0; border: none;
+  background: none; cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.mp-tab:hover { color: rgba(255,255,255,0.85); }
 .mp-tab.active { color: white; border-bottom-color: white; }
 .marketplace-content { padding: 16px; background: white; }
-.mp-title { font-size: 16px; font-weight: 700; color: #333; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid #005bff; }
+.mp-title { font-size: 16px; font-weight: 700; color: #333; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); }
 .mp-title:first-child { margin-top: 0; font-size: 20px; }
 .mp-list { margin-left: 18px; margin-bottom: 6px; color: #444; line-height: 1.6; }
 .mp-text { margin-bottom: 8px; color: #444; line-height: 1.6; }

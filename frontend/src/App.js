@@ -62,6 +62,7 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedMarketplace, setSelectedMarketplace] = useState('ozon');
   const progressRef = useRef(null);
 
   // Load history from localStorage
@@ -426,11 +427,11 @@ function App() {
 
               {showPreview ? (
                 <div className="marketplace-preview">
-                  <div className="marketplace-header">
+                  <div className={`marketplace-header ${selectedMarketplace}`}>
                     <div className="mp-tabs">
-                      <span className="mp-tab active">Ozon</span>
-                      <span className="mp-tab">Wildberries</span>
-                      <span className="mp-tab">Яндекс.Маркет</span>
+                      <button className={`mp-tab ${selectedMarketplace === 'ozon' ? 'active' : ''}`} onClick={() => setSelectedMarketplace('ozon')}>Ozon</button>
+                      <button className={`mp-tab ${selectedMarketplace === 'wb' ? 'active' : ''}`} onClick={() => setSelectedMarketplace('wb')}>Wildberries</button>
+                      <button className={`mp-tab ${selectedMarketplace === 'ym' ? 'active' : ''}`} onClick={() => setSelectedMarketplace('ym')}>Яндекс.Маркет</button>
                     </div>
                   </div>
                   <div className="marketplace-content">
