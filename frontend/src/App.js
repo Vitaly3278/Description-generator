@@ -237,6 +237,11 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const clearImage = () => {
+    setImage(null);
+    setImagePreview(null);
+  };
+
   const clearAll = () => {
     setImage(null);
     setImagePreview(null);
@@ -359,7 +364,10 @@ function App() {
             {imagePreview ? (
               <div className="preview-container">
                 <img src={imagePreview} alt="Preview" className="preview-image" />
-                <button className="btn-remove" onClick={clearAll}>✕</button>
+                <button className="btn-next-image" onClick={clearImage}>
+                  <Upload size={14} />
+                  Следующее фото
+                </button>
               </div>
             ) : (
               <label className="upload-placeholder" htmlFor="file-input">
