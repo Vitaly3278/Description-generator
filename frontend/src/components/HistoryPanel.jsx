@@ -39,15 +39,13 @@ function HistoryPanel({ history, show, onClose, onLoad, onDelete, onClear }) {
           ) : (
             history.map(item => (
               <div key={item.id} className="history-item" onClick={() => onLoad(item)}>
-                {item.thumbnailHash && (
-                  <div className="history-thumb-placeholder" title={item.productName || 'Товар'}>
-                    {item.productName ? item.productName.charAt(0).toUpperCase() : '?'}
-                  </div>
-                )}
+                <div className="history-thumb-placeholder" title={item.productName || 'Товар'}>
+                  {item.productName ? item.productName.charAt(0).toUpperCase() : '?'}
+                </div>
                 <div className="history-info">
                   <span className="history-style">{STYLES.find(s => s.id === item.style)?.label || item.style}</span>
                   <span className="history-date">{formatDate(item.date)}</span>
-                  <span className="history-preview">{item.description.slice(0, 80)}...</span>
+                  <span className="history-preview">{item.description?.slice(0, 80) || ''}...</span>
                 </div>
                 <button className="btn-delete-history" onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}>
                   <Trash2 size={14} />

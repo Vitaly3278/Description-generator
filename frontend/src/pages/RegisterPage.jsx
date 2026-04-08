@@ -59,7 +59,7 @@ function RegisterPage() {
 
       <div className="auth-card">
         <h2>Регистрация</h2>
-        <p className="auth-bonus">🎁 5 бесплатных генераций при регистрации!</p>
+        <p className="auth-bonus">🎁 10₽ на баланс при регистрации!</p>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>

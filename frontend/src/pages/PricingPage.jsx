@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sparkles, Zap, Check, Home, Moon, Sun } from 'lucide-react';
+import { Sparkles, Zap, Check, Home, Moon, Sun, Copy } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 const API_URL = import.meta?.env?.VITE_API_URL || '/api';
 
 const PACKAGES = [
+  { amount: 5, label: '5 генераций', price: 50, popular: true },
   { amount: 10, label: '10 генераций', price: 100, popular: false },
-  { amount: 50, label: '50 генераций', price: 500, popular: true },
+  { amount: 50, label: '50 генераций', price: 500, popular: false },
   { amount: 100, label: '100 генераций', price: 1000, popular: false },
 ];
 
@@ -16,6 +18,7 @@ function PricingPage() {
   const [checking, setChecking] = useState(false);
   const [ymUrl, setYmUrl] = useState('');
   const [payError, setPayError] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
 
@@ -48,10 +51,9 @@ function PricingPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Ошибка создания платежа');
       setYmUrl(data.ym_url);
-      // Открываем ЮMoney в новом окне
-      window.open(data.ym_url, '_blank');
-      // Периодически проверяем баланс — оплата прошла или нет
       setChecking(true);
+      // Открываем оплату в новом окне — на случай если QR не работает
+      window.open(data.ym_url, 'yoomoney_payment', 'width=500,height=700,scrollbars=yes');
     } catch (err) {
       setPayError(err.message);
     } finally {
@@ -134,16 +136,30 @@ function PricingPage() {
         {loading ? 'Создание платежа...' : checking ? 'Ожидание оплаты...' : `Оплатить ${PACKAGES[selected].price} ₽`}
       </button>
 
-      {checking && (
-        <p className="pay-hint">
-          ⏳ Ожидание подтверждения оплаты... Проверка баланса каждые 3 секунды.
-        </p>
-      )}
-
-      {ymUrl && !checking && (
-        <p className="pay-hint">
-          Окно оплаты открылось в новой вкладке. После оплаты баланс обновится автоматически.
-        </p>
+      {checking && ymUrl && (
+        <div className="qr-payment-section">
+          <div className="qr-payment-card">
+            <h3>📱 Оплата через СБП</h3>
+            <p className="qr-instruction">Отсканируйте QR-код в приложении вашего банка</p>
+            <div className="qr-code-wrapper">
+              <QRCodeSVG value={ymUrl} size={200} level="M" />
+            </div>
+            <div className="qr-payment-info">
+              <span className="qr-amount">Сумма: {PACKAGES[selected].price}₽</span>
+              <span className="qr-method">Система быстрых платежей</span>
+            </div>
+            <button className="btn-copy-link" onClick={() => {
+              navigator.clipboard.writeText(ymUrl);
+              setCopiedLink(true);
+              setTimeout(() => setCopiedLink(false), 2000);
+            }}>
+              {copiedLink ? <><Check size={14} /> Скопировано</> : <><Copy size={14} /> Скопировать ссылку</>}
+            </button>
+          </div>
+          <p className="pay-hint">
+            ⏳ Ожидание подтверждения оплаты... Проверка баланса каждые 3 секунды.
+          </p>
+        </div>
       )}
 
       {payError && (

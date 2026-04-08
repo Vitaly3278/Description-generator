@@ -17,6 +17,9 @@ frontend/build/
 # Qwen
 .qwen/
 
+# Backend data
+backend/data/*.db
+
 # OS
 .DS_Store
 Thumbs.db

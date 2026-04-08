@@ -76,7 +76,7 @@ YMONEY_WALLET = os.getenv("YMONEY_WALLET", "4100119509739491")
 YMONEY_SECRET_KEY = os.getenv("YMONEY_SECRET_KEY", "")
 YMONEY_SUCCESS_URL = os.getenv("YMONEY_SUCCESS_URL", "http://localhost:3000/payment/success")
 
-FREE_GENERATIONS = 5  # бесплатных коротких генераций без авторизации
+FREE_GENERATIONS = 10  # ₽ на баланс при регистрации
 COST_PER_GENERATION = 10.0  # одна генерация = 10₽
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "vital-nvl@mail.ru")
@@ -203,7 +203,7 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user = User(
         email=data.email,
         hashed_password=get_password_hash(data.password),
-        balance=0.0
+        balance=FREE_GENERATIONS
     )
     db.add(user)
     await db.commit()
@@ -244,8 +244,8 @@ async def create_payment(
     db: AsyncSession = Depends(get_db)
 ):
     """Создаёт платёж через ЮMoney QuickPay."""
-    if data.amount < 10:
-        raise HTTPException(status_code=400, detail="Минимальная сумма — 10₽")
+    if data.amount < 1:
+        raise HTTPException(status_code=400, detail="Минимальная сумма — 1₽")
 
     # Уникальная метка платежа
     ym_label = f"gen_{user.id}_{int(time.time())}_{hashlib.md5(f'{user.id}{time.time()}'.encode()).hexdigest()[:8]}"
@@ -260,11 +260,11 @@ async def create_payment(
     await db.commit()
     await db.refresh(payment)
 
-    # Формируем URL для ЮMoney QuickPay
+    # Формируем URL для ЮMoney QuickPay (СБП — оплата по QR)
     ym_url = (
         f"https://yoomoney.ru/quickpay/confirm?receiver={YMONEY_WALLET}"
         f"&quickpay-form=shop&targets=Пополнение баланса Description Generator"
-        f"&paymentType=AC&sum={data.amount}"
+        f"&paymentType=SBP&sum={data.amount}"
         f"&label={ym_label}"
         f"&successURL={YMONEY_SUCCESS_URL}"
     )
@@ -470,8 +470,9 @@ async def generate_description(
     file: UploadFile = File(...),
     style: str = Form(default="short"),
     db: AsyncSession = Depends(get_db),
-    user: Optional[User] = Depends(get_optional_user)
+    user: User = Depends(get_current_user)
 ):
+    """Генерация описания — только для авторизованных."""
     if not OPENROUTER_API_KEY:
         raise HTTPException(status_code=500, detail="API key not configured")
 
@@ -487,23 +488,13 @@ async def generate_description(
     if style not in PROMPTS:
         style = "short"
 
-    # Без авторизации — только short стиль
-    if user is None:
-        if style != "short":
-            raise HTTPException(
-                status_code=401,
-                detail="Для стандартного и SEO стиля нужна авторизация. Войдите или зарегистрируйтесь."
-            )
-        # Для анонимных — генерируем без списания баланса
-        logger.info("Anonymous generation with style='short' from IP %s", client_ip)
-    else:
-        # Проверка баланса для авторизованных
-        if user.balance < COST_PER_GENERATION:
-            raise HTTPException(
-                status_code=402,
-                detail="Недостаточно средств. Пополните баланс.",
-                headers={"X-Balance": str(user.balance)}
-            )
+    # Проверка баланса
+    if user.balance < COST_PER_GENERATION:
+        raise HTTPException(
+            status_code=402,
+            detail=f"Баланс: {user.balance:.0f}₽. Для генерации нужно {COST_PER_GENERATION:.0f}₽. Пополните баланс в разделе «Пополнить».",
+            headers={"X-Balance": str(user.balance)}
+        )
 
     try:
         image_bytes = await file.read()
@@ -517,8 +508,7 @@ async def generate_description(
         prompt = PROMPTS[style]
         max_tokens = 800 if style == "short" else 2000
 
-        user_info = f"User {user.id}" if user else f"Anonymous {client_ip}"
-        logger.info("%s generating with style='%s'", user_info, style)
+        logger.info("User %d generating with style='%s', balance=%.1f", user.id, style, user.balance)
 
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
@@ -559,30 +549,27 @@ async def generate_description(
         description = re.sub(r'_+', '', description)
         description = description.strip()
 
-        # Для авторизованных — списание баланса и сохранение
-        balance = None
-        if user is not None:
-            user.balance -= COST_PER_GENERATION
-            gen = Generation(
-                user_id=user.id,
-                style=style,
-                description=description,
-                cost=COST_PER_GENERATION
-            )
-            db.add(gen)
-            await db.commit()
-            balance = user.balance
+        # Списание баланса и сохранение
+        user.balance -= COST_PER_GENERATION
+        gen = Generation(
+            user_id=user.id,
+            style=style,
+            description=description,
+            cost=COST_PER_GENERATION
+        )
+        db.add(gen)
+        await db.commit()
 
-        logger.info("Description generated (%d chars), balance: %s", len(description), balance)
+        logger.info("Description generated (%d chars), new balance: %.1f", len(description), user.balance)
         return {
             "description": description,
-            "balance": balance
+            "balance": user.balance
         }
 
     except HTTPException:
         raise
     except ValueError as e:
-        logger.warning("Invalid image: %s", e)
+        logger.warning("Invalid image from user %d: %s", user.id, e)
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error("Unexpected error: %s", e, exc_info=True)
