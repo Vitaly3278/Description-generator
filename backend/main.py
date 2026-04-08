@@ -244,13 +244,13 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     token = create_access_token({"sub": user.id})
     return {
         "token": token,
-        "user": {"id": user.id, "email": user.email, "balance": user.balance}
+        "user": {"id": user.id, "email": user.email, "balance": user.balance, "is_admin": user.is_admin}
     }
 
 
 @app.get("/api/auth/me")
 async def get_me(user: User = Depends(get_current_user)):
-    return {"id": user.id, "email": user.email, "balance": user.balance}
+    return {"id": user.id, "email": user.email, "balance": user.balance, "is_admin": user.is_admin}
 
 
 # ======================== Payment (ЮMoney) ========================

@@ -27,7 +27,8 @@ function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Ошибка входа');
       login(data.token, data.user);
-      navigate('/');
+      // Перезагружаем страницу чтобы обновить контекст авторизации
+      window.location.href = '/';
     } catch (err) {
       setError(err.message);
     } finally {

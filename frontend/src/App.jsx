@@ -547,7 +547,18 @@ function App() {
 }
 
 function AuthRouter() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>

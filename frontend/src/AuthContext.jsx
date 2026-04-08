@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Проверяем токен при монтировании
+  // Проверка токена при загрузке
   useEffect(() => {
     const token = localStorage.getItem('auth-token');
     if (token) {
@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
         setUser(data);
         localStorage.setItem('auth-user', JSON.stringify(data));
       }).catch(() => {
+        // Старый/невалидный токен — чистим
         localStorage.removeItem('auth-token');
         localStorage.removeItem('auth-user');
         setUser(null);
@@ -51,6 +52,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   const getToken = useCallback(() => localStorage.getItem('auth-token'), []);
+
+  // Если пользователь был в localStorage но сессия протухла — покажем лендинг
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8fafc' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
+          <p style={{ color: '#64748b', fontSize: 14 }}>Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, updateBalance, getToken }}>
