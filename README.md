@@ -4,10 +4,6 @@
 
 > Загрузите фото товара — нейросеть мгновенно определит товар и напишет убедительное описание, которое поможет увеличить продажи.
 
-## Скриншот
-
-![Скриншот](screenshot.png)
-
 ## Возможности
 
 - ✨ **AI-анализ фото** — нейросеть Qwen-VL распознаёт товар по изображению
@@ -133,7 +129,7 @@ description/
 | `DATABASE_URL` | URL базы данных | `sqlite+aiosqlite:///./data/app.db` |
 | `YMONEY_WALLET` | Кошелёк ЮMoney | — |
 | `YMONEY_SUCCESS_URL` | URL после оплаты | `http://localhost:3000/payment/success` |
-| `ADMIN_EMAIL` | Email администратора | `vital-nvl@mail.ru` |
+| `ADMIN_EMAIL` | Email администратора | - |
 
 ### Frontend
 
