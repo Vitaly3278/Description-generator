@@ -22,7 +22,7 @@
 ### Требования
 
 - Python 3.9+
-- Node.js 16+
+- Node.js 18+
 - API ключ от OpenRouter
 
 ### 1. Получи API ключ
@@ -47,7 +47,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Создай .env файл с API ключом
-echo 'OPENROUTER_API_KEY=sk-or-v1-твой_ключ' > .env
+cp .env.example .env
+# Отредактируй .env, вставь свой OPENROUTER_API_KEY
 
 # Запусти сервер
 python main.py
@@ -60,10 +61,17 @@ python main.py
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
 Открой **http://localhost:3000** в браузере.
+
+### Docker Compose (альтернатива)
+
+```bash
+export OPENROUTER_API_KEY=sk-or-v1-твой_ключ
+docker compose up --build
+```
 
 ## Структура проекта
 
@@ -73,11 +81,18 @@ description/
 │   ├── main.py             # API сервер + интеграция с OpenRouter
 │   ├── requirements.txt    # Python зависимости
 │   └── .env.example        # Пример .env файла
-├── frontend/               # React (JavaScript)
+├── frontend/               # React + Vite
 │   ├── src/
 │   │   ├── App.js          # Основной компонент
+│   │   ├── components/     # Подкомпоненты
+│   │   │   ├── UploadZone.js
+│   │   │   ├── ProgressBar.js
+│   │   │   ├── ResultDisplay.js
+│   │   │   └── HistoryPanel.js
 │   │   └── App.css         # Стили
-│   └── package.json
+│   ├── index.html          # Vite entry point
+│   └── vite.config.js
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -86,8 +101,26 @@ description/
 | Слой | Технология |
 |------|------------|
 | **Backend** | FastAPI, httpx, Pillow |
-| **Frontend** | React, CSS (без фреймворков) |
+| **Frontend** | React 19, Vite, react-markdown |
 | **AI** | Qwen-VL Plus через OpenRouter |
+
+## Переменные окружения
+
+### Backend
+
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `OPENROUTER_API_KEY` | Ключ OpenRouter | — |
+| `AI_MODEL` | Модель AI | `qwen/qwen-vl-plus` |
+| `HTTP_REFERER` | Referer для OpenRouter | `http://localhost:3000` |
+| `ALLOWED_ORIGINS` | Разрешённые CORS домены | `http://localhost:3000,http://localhost:5173` |
+| `MAX_FILE_SIZE` | Макс. размер файла (байты) | `10485760` (10MB) |
+
+### Frontend
+
+| Переменная | Описание |
+|------------|----------|
+| `VITE_API_URL` | URL API-сервера (опционально, в dev проксируется автоматически) |
 
 ## API
 
