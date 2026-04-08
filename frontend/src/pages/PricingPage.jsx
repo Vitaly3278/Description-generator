@@ -6,14 +6,14 @@ import { QRCodeSVG } from 'qrcode.react';
 const API_URL = import.meta?.env?.VITE_API_URL || '/api';
 
 const PACKAGES = [
-  { amount: 5, label: '5 генераций', price: 50, popular: true },
+  { amount: 5, label: '5 генераций', price: 50, popular: false },
   { amount: 10, label: '10 генераций', price: 100, popular: false },
-  { amount: 50, label: '50 генераций', price: 500, popular: false },
+  { amount: 50, label: '50 генераций', price: 500, popular: true },
   { amount: 100, label: '100 генераций', price: 1000, popular: false },
 ];
 
 function PricingPage() {
-  const [selected, setSelected] = useState(1);
+  const [selected, setSelected] = useState(2);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [ymUrl, setYmUrl] = useState('');

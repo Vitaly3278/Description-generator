@@ -14,7 +14,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request, Dep
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from dotenv import load_dotenv
@@ -24,7 +24,7 @@ import httpx
 from database import init_db, get_db, User, Generation, Payment
 from auth import (
     get_password_hash, verify_password, create_access_token,
-    get_current_user, get_optional_user, security
+    get_current_user, security
 )
 from jose import jwt, JWTError
 from auth import SECRET_KEY, ALGORITHM
@@ -80,6 +80,18 @@ FREE_GENERATIONS = 10  # ₽ на баланс при регистрации
 COST_PER_GENERATION = 10.0  # одна генерация = 10₽
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "vital-nvl@mail.ru")
+
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+    @field_validator('password')
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('Пароль должен содержать минимум 8 символов')
+        return v
 
 # Rate limiting
 rate_limit_store: dict[str, list[float]] = defaultdict(list)
@@ -200,10 +212,16 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email уже зарегистрирован")
 
+    # Первый пользователь становится админом
+    result = await db.execute(select(User))
+    users_count = len(result.scalars().all())
+    is_first_user = users_count == 0
+
     user = User(
         email=data.email,
         hashed_password=get_password_hash(data.password),
-        balance=FREE_GENERATIONS
+        balance=FREE_GENERATIONS,
+        is_admin=is_first_user
     )
     db.add(user)
     await db.commit()
@@ -212,7 +230,7 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     token = create_access_token({"sub": user.id})
     return {
         "token": token,
-        "user": {"id": user.id, "email": user.email, "balance": user.balance}
+        "user": {"id": user.id, "email": user.email, "balance": user.balance, "is_admin": user.is_admin}
     }
 
 
@@ -285,15 +303,19 @@ async def payment_notify(request: Request, db: AsyncSession = Depends(get_db)):
     if notification_type != "p2p-incoming":
         return {"status": "ignored"}
 
-    # Проверка секрета (в продакшене — через HTTP-запрос к ЮMoney API)
-    # Для демо — просто ищем по label
     if not label:
         return {"status": "no_label"}
 
+    # Ищем платёж по label
     result = await db.execute(select(Payment).where(Payment.ym_label == label))
     payment = result.scalar_one_or_none()
     if not payment or payment.status == "success":
         return {"status": "already_processed" if payment and payment.status == "success" else "not_found"}
+
+    # Проверяем что сумма совпадает с записью в БД
+    if float(amount) != payment.amount:
+        logger.warning("Payment amount mismatch: expected %.2f, got %s", payment.amount, amount)
+        return {"status": "amount_mismatch"}
 
     # Обновляем платёж и баланс
     payment.status = "success"
@@ -301,10 +323,10 @@ async def payment_notify(request: Request, db: AsyncSession = Depends(get_db)):
     payment_user = await db.execute(select(User).where(User.id == payment.user_id))
     user = payment_user.scalar_one_or_none()
     if user:
-        user.balance += float(amount)
+        user.balance += payment.amount  # используем сумму из БД, не из формы
 
     await db.commit()
-    logger.info("Payment %s confirmed: %.2f₽ for user %d", label, float(amount), payment.user_id)
+    logger.info("Payment %s confirmed: %.2f₽ for user %d", label, payment.amount, payment.user_id)
     return {"status": "ok"}
 
 
@@ -328,7 +350,7 @@ async def require_admin(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Проверяет, что пользователь — админ."""
+    """Проверяет, что пользователь — админ (is_admin=True)."""
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -338,22 +360,44 @@ async def require_admin(
         user_id = int(user_id_str)
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
-        if user is None or user.email != ADMIN_EMAIL:
+        if user is None or not user.is_admin:
             raise HTTPException(status_code=403, detail="Forbidden")
         return user
     except (JWTError, ValueError):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
+class AdminUserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+    @field_validator('password')
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('Пароль должен содержать минимум 8 символов')
+        return v
+
+    balance: float = 0.0
+
+    @field_validator('balance')
+    @classmethod
+    def balance_non_negative(cls, v: float) -> float:
+        if v < 0:
+            raise ValueError('Баланс не может быть отрицательным')
+        return v
+
+
 class AdminUserUpdate(BaseModel):
     balance: Optional[float] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
 
-
-class AdminUserCreate(BaseModel):
-    email: str
-    password: str
-    balance: float = 0.0
+    @field_validator('balance')
+    @classmethod
+    def balance_non_negative(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and v < 0:
+            raise ValueError('Баланс не может быть отрицательным')
+        return v
 
 
 @app.get("/api/admin/users")
@@ -549,7 +593,16 @@ async def generate_description(
         description = re.sub(r'_+', '', description)
         description = description.strip()
 
-        # Списание баланса и сохранение
+        # Списание баланса и сохранение (оптимистическая блокировка)
+        # Перечитываем пользователя для актуального баланса
+        await db.refresh(user)
+        if user.balance < COST_PER_GENERATION:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Баланс: {user.balance:.0f}₽. Для генерации нужно {COST_PER_GENERATION:.0f}₽. Пополните баланс в разделе «Пополнить».",
+                headers={"X-Balance": str(user.balance)}
+            )
+
         user.balance -= COST_PER_GENERATION
         gen = Generation(
             user_id=user.id,

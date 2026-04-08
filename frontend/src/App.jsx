@@ -403,7 +403,7 @@ function MainPage() {
             </button>
           </div>
           <div className="top-bar-right">
-            {user?.email === 'vital-nvl@mail.ru' && (
+            {user?.is_admin && (
               <Link to="/admin" className="btn-icon" title="Админ-панель">
                 <Shield size={18} />
               </Link>

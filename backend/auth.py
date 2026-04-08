@@ -10,7 +10,9 @@ from sqlalchemy import select
 
 from database import get_db, User
 
-SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret-change-me-in-production-2026")
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET environment variable is required in production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 дней
 

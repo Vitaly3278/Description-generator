@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, text
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean, text
 
 
 DATABASE_URL = os.getenv(
@@ -14,6 +14,15 @@ DATABASE_URL = os.getenv(
 os.makedirs(os.path.dirname(DATABASE_URL.replace("sqlite+aiosqlite:///", "")), exist_ok=True)
 
 engine = create_async_engine(DATABASE_URL, echo=False)
+
+# Включаем foreign keys для SQLite
+from sqlalchemy import event
+
+@event.listens_for(engine.sync_engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -30,7 +39,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
-    balance = Column(Float, default=5.0, nullable=False)  # 5 бесплатных генераций
+    balance = Column(Float, default=10.0, nullable=False)  # 10₽ при регистрации
+    is_admin = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
