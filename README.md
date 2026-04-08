@@ -2,7 +2,7 @@
 
 Генерация продающих описаний товаров по фото с помощью ИИ.
 
-> Загрузите фотографию товара — нейросеть создаст профессиональное описание с характеристиками, преимуществами и призывом к покупке.
+> Загрузите фото товара — нейросеть мгновенно определит товар и напишет убедительное описание, которое поможет увеличить продажи.
 
 ## Скриншот
 
@@ -13,9 +13,13 @@
 - ✨ **AI-анализ фото** — нейросеть Qwen-VL распознаёт товар по изображению
 - 🌍 **Русский язык** — описания генерируются на русском языке
 - ⚡ **Быстро** — готовое описание за 10-15 секунд
-- 📋 **Копирование** — одним кликом в буфер обмена
-- 🔒 **Без регистрации** — нужен только API ключ
+- 📋 **Копирование и скачивание** — в буфер обмена или файл (.md / .txt)
+- 🔐 **Авторизация** — регистрация, вход, персональная история генераций
+- 🎁 **10₽ при регистрации** — бесплатный стартовый баланс
+- 💳 **Оплата через ЮMoney** — пополнение баланса (1 генерация = 10₽)
+- 🛡️ **Админ-панель** — управление пользователями, балансами
 - 📱 **Адаптивный дизайн** — работает на любых устройствах
+- 🌙 **Тёмная тема** — переключатель светлой/тёмной темы
 
 ## Быстрый старт
 
@@ -77,20 +81,28 @@ docker compose up --build
 
 ```
 description/
-├── backend/                # FastAPI (Python)
-│   ├── main.py             # API сервер + интеграция с OpenRouter
-│   ├── requirements.txt    # Python зависимости
-│   └── .env.example        # Пример .env файла
-├── frontend/               # React + Vite
+├── backend/                    # FastAPI (Python)
+│   ├── main.py                 # API сервер + интеграция с OpenRouter
+│   ├── database.py             # SQLAlchemy модели (users, generations, payments)
+│   ├── auth.py                 # JWT аутентификация
+│   ├── requirements.txt        # Python зависимости
+│   └── .env.example            # Пример .env файла
+├── frontend/                   # React + Vite
 │   ├── src/
-│   │   ├── App.js          # Основной компонент
-│   │   ├── components/     # Подкомпоненты
-│   │   │   ├── UploadZone.js
-│   │   │   ├── ProgressBar.js
-│   │   │   ├── ResultDisplay.js
-│   │   │   └── HistoryPanel.js
-│   │   └── App.css         # Стили
-│   ├── index.html          # Vite entry point
+│   │   ├── App.jsx             # Роутинг + Landing/MainPage
+│   │   ├── AuthContext.jsx     # Контекст авторизации
+│   │   ├── components/         # Подкомпоненты
+│   │   │   ├── UploadZone.jsx
+│   │   │   ├── ProgressBar.jsx
+│   │   │   ├── ResultDisplay.jsx
+│   │   │   └── HistoryPanel.jsx
+│   │   └── pages/
+│   │       ├── LoginPage.jsx
+│   │       ├── RegisterPage.jsx
+│   │       ├── PricingPage.jsx
+│   │       ├── PaymentSuccessPage.jsx
+│   │       └── AdminPage.jsx
+│   ├── index.html              # Vite entry point
 │   └── vite.config.js
 ├── docker-compose.yml
 └── README.md
@@ -100,8 +112,10 @@ description/
 
 | Слой | Технология |
 |------|------------|
-| **Backend** | FastAPI, httpx, Pillow |
-| **Frontend** | React 19, Vite, react-markdown |
+| **Backend** | FastAPI, SQLAlchemy, SQLite, httpx, Pillow |
+| **Auth** | JWT (python-jose), bcrypt |
+| **Frontend** | React 19, Vite, React Router, react-markdown |
+| **Оплата** | ЮMoney QuickPay |
 | **AI** | Qwen-VL Plus через OpenRouter |
 
 ## Переменные окружения
@@ -113,8 +127,13 @@ description/
 | `OPENROUTER_API_KEY` | Ключ OpenRouter | — |
 | `AI_MODEL` | Модель AI | `qwen/qwen-vl-plus` |
 | `HTTP_REFERER` | Referer для OpenRouter | `http://localhost:3000` |
-| `ALLOWED_ORIGINS` | Разрешённые CORS домены | `http://localhost:3000,http://localhost:5173` |
+| `ALLOWED_ORIGINS` | Разрешённые CORS домены | `http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173` |
 | `MAX_FILE_SIZE` | Макс. размер файла (байты) | `10485760` (10MB) |
+| `JWT_SECRET` | Секретный ключ JWT | `dev-secret-change-me...` |
+| `DATABASE_URL` | URL базы данных | `sqlite+aiosqlite:///./data/app.db` |
+| `YMONEY_WALLET` | Кошелёк ЮMoney | — |
+| `YMONEY_SUCCESS_URL` | URL после оплаты | `http://localhost:3000/payment/success` |
+| `ADMIN_EMAIL` | Email администратора | `vital-nvl@mail.ru` |
 
 ### Frontend
 
@@ -124,26 +143,43 @@ description/
 
 ## API
 
-### `POST /api/generate-description`
+### Аутентификация
 
-Загрузите изображение — получите описание товара.
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/auth/register` | POST | Регистрация (email, password → 10₽ на баланс) |
+| `/api/auth/login` | POST | Вход (email, password → JWT токен) |
+| `/api/auth/me` | GET | Информация о текущем пользователе |
 
-**Request:** `multipart/form-data` с полем `file` (изображение)
+### Генерация
 
-**Response:**
-```json
-{
-  "description": "**Название товара**\n\nОписание...\n\n**Характеристики:**\n- ..."
-}
-```
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/generate-description` | POST | Генерация описания (только для авторизованных) |
+| `/api/history` | GET | История генераций пользователя |
 
-### `GET /api/health`
+### Оплата
 
-Проверка состояния сервера.
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/payment/create` | POST | Создание платежа через ЮMoney |
+| `/api/payment/notify` | POST | Webhook от ЮMoney |
+| `/api/payment/status` | GET | Статус платежей пользователя |
 
-```json
-{ "status": "ok", "api_configured": true }
-```
+### Админ-панель (только `ADMIN_EMAIL`)
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/admin/users` | GET | Список всех пользователей |
+| `/api/admin/users` | POST | Создать пользователя |
+| `/api/admin/users/{id}` | PUT | Изменить баланс/email |
+| `/api/admin/users/{id}` | DELETE | Удалить пользователя |
+
+### Health
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/health` | GET | Проверка состояния сервера |
 
 ## Лицензия
 
